@@ -38,7 +38,6 @@ export default async function AdminPage({
       </h1>
       <p style={{ color: 'var(--mist)', fontSize: '.85rem', marginBottom: '2rem' }}>مخبوز — إدارة الخبازين</p>
 
-      {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
         {[
           { label: 'إجمالي', value: total, color: 'var(--teal)' },
@@ -58,7 +57,6 @@ export default async function AdminPage({
         ))}
       </div>
 
-      {/* Filter tabs */}
       <div style={{ display: 'flex', gap: '.5rem', marginBottom: '1.5rem' }}>
         {[
           { label: 'الكل', value: '' },
@@ -84,7 +82,6 @@ export default async function AdminPage({
         ))}
       </div>
 
-      {/* Baker list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
         {bakers && bakers.length > 0 ? bakers.map((baker) => (
           <div key={baker.id} style={{
