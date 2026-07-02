@@ -1,0 +1,21 @@
+@import 'tailwindcss';
+
+:root {
+  --cream:   #F5F0D8;
+  --teal:    #2D5059;
+  --teal2:   #3D6B77;
+  --honey:   #C4893D;
+  --honey2:  #E0A355;
+  --ink:     #1C2B31;
+  --mist:    #7A9EA6;
+  --paper:   #FAF7EC;
+  --border:  rgba(45,80,89,.1);
+}
+
+html {
+  direction: rtl;
+  font-family: 'Tajawal', 'Segoe UI', system-ui, sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}

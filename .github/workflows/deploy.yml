@@ -1,0 +1,26 @@
+name: Deploy to makhboz.net
+
+on:
+  push:
+    branches:
+      - claude/g-stack-method-check-nmoay7
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: 159.223.96.246
+          username: root
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /var/www/makhboz-app
+            git pull origin claude/g-stack-method-check-nmoay7
+            npm install --prefer-offline
+            npm run build
+            pm2 restart makhboz
+            pm2 save
+            echo "✅ Deployed at $(date)"
