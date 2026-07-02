@@ -18,7 +18,8 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             cd /var/www/makhboz-app
-            git pull origin claude/g-stack-method-check-nmoay7
+            git pull origin main
+            rm -rf .next
             npm install --prefer-offline
             npm run build
             pm2 restart makhboz
