@@ -2,7 +2,7 @@ import { createServerClient } from '@/lib/supabase/server'
 import BakerCard from '@/components/BakerCard'
 import HeroSearch from '@/components/HeroSearch'
 
-export const revalidate = 60
+export const revalidate = 0
 
 const CITIES = ['الرياض', 'جدة', 'الدمام', 'مكة المكرمة', 'المدينة المنورة']
 
