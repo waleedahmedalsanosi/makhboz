@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
 import { createServerClient } from '@/lib/supabase/server'
 
 export const revalidate = 300
@@ -9,11 +8,7 @@ type Props = { params: Promise<{ username: string }> }
 export async function generateMetadata({ params }: Props) {
   const { username } = await params
   const supabase = createServerClient()
-  const { data } = await supabase
-    .from('bakers')
-    .select('display_name, city, bio')
-    .eq('username', username)
-    .single()
+  const { data } = await supabase.from('bakers').select('display_name, city, bio').eq('username', username).single()
   if (!data) return { title: 'مخبوز' }
   return {
     title: `${data.display_name} — مخبوز`,
@@ -26,47 +21,79 @@ export default async function BakerPage({ params }: Props) {
   const supabase = createServerClient()
 
   const { data: baker } = await supabase
-    .from('bakers')
-    .select('*')
-    .eq('username', username)
-    .eq('is_active', true)
-    .single()
-
+    .from('bakers').select('*').eq('username', username).eq('is_active', true).single()
   if (!baker) notFound()
 
   const { data: products } = await supabase
-    .from('products')
-    .select('*')
-    .eq('baker_id', baker.id)
-    .eq('is_available', true)
-    .order('created_at', { ascending: false })
+    .from('products').select('*').eq('baker_id', baker.id).eq('is_available', true).order('created_at', { ascending: false })
 
+  const waText = encodeURIComponent(`مرحباً، رأيت ملفك على مخبوز وأريد الطلب 🍞`)
   const whatsappLink = baker.whatsapp_number
-    ? `https://wa.me/${baker.whatsapp_number.replace(/\D/g, '')}?text=${encodeURIComponent(`مرحباً، رأيت ملفك على مخبوز وأريد الطلب 🥐`)}`
+    ? `https://wa.me/${baker.whatsapp_number.replace(/\D/g, '')}?text=${waText}`
     : null
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      {/* Baker header */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="relative w-20 h-20 rounded-full overflow-hidden bg-[#34565F]/10 flex-shrink-0">
-          {baker.avatar_url ? (
-            <Image src={baker.avatar_url} alt={baker.display_name} fill className="object-cover" />
-          ) : (
-            <span className="flex items-center justify-center h-full text-3xl">👩‍🍳</span>
-          )}
-        </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-[#22333B]">{baker.display_name}</h1>
-            {baker.is_verified && (
-              <span className="text-[#C4893D] text-lg" title="موثق">✓</span>
-            )}
-          </div>
-          <p className="text-[#34565F] text-sm">{baker.city}</p>
-          {baker.bio && <p className="text-[#22333B]/70 mt-1 text-sm">{baker.bio}</p>}
+    <div style={{ maxWidth: '640px', margin: '0 auto', padding: '2rem 1.25rem 4rem' }}>
+
+      {/* Cover + Avatar */}
+      <div style={{
+        background: 'linear-gradient(135deg, var(--teal) 0%, var(--teal2) 60%, var(--honey) 140%)',
+        borderRadius: '24px',
+        height: '130px',
+        position: 'relative',
+        overflow: 'hidden',
+        marginBottom: '3rem',
+      }}>
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: 'repeating-conic-gradient(rgba(255,255,255,.05) 0deg 3deg, transparent 3deg 45deg)',
+          backgroundSize: '60px 60px',
+        }} />
+        <div style={{
+          position: 'absolute',
+          bottom: '-28px',
+          right: '1.4rem',
+          width: '68px',
+          height: '68px',
+          borderRadius: '50%',
+          background: 'var(--cream)',
+          border: '3px solid #fff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '2.1rem',
+          boxShadow: '0 6px 20px rgba(30,50,58,.18)',
+          overflow: 'hidden',
+        }}>
+          {baker.avatar_url
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={baker.avatar_url} alt={baker.display_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : '👩‍🍳'
+          }
         </div>
       </div>
+
+      {/* Name + location */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '.25rem' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--ink)', letterSpacing: '-.02em' }}>
+          {baker.display_name}
+        </h1>
+        {baker.is_verified && (
+          <span style={{
+            fontSize: '.65rem', fontWeight: 700, background: 'var(--honey)',
+            color: '#fff', padding: '.18rem .55rem', borderRadius: '100px',
+          }}>موثّق ✓</span>
+        )}
+      </div>
+      <p style={{ fontSize: '.85rem', color: 'var(--mist)', marginBottom: '.85rem', fontWeight: 500 }}>
+        📍 {baker.city}
+      </p>
+      {baker.bio && (
+        <p style={{ fontSize: '.92rem', color: 'rgba(28,43,49,.65)', lineHeight: 1.68, marginBottom: '1.2rem' }}>
+          {baker.bio}
+        </p>
+      )}
 
       {/* WhatsApp CTA */}
       {whatsappLink && (
@@ -74,38 +101,51 @@ export default async function BakerPage({ params }: Props) {
           href={whatsappLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="block w-full text-center bg-[#25D366] text-white py-3 rounded-2xl font-semibold text-lg mb-8 hover:opacity-90 transition"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: '.6rem', background: '#25D366', color: '#fff',
+            padding: '.95rem', borderRadius: '14px', fontWeight: 800,
+            fontSize: '1rem', textDecoration: 'none', letterSpacing: '.01em',
+            boxShadow: '0 6px 20px rgba(37,211,102,.3)', marginBottom: '1.6rem',
+          }}
         >
-          تواصل عبر واتساب 💬
+          💬 تواصل عبر واتساب
         </a>
       )}
 
       {/* Products */}
-      <h2 className="text-xl font-bold text-[#22333B] mb-4">المنتجات</h2>
-      {products && products.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {products.map((p) => (
-            <div key={p.id} className="bg-white rounded-2xl shadow-sm overflow-hidden border border-[#34565F]/10">
-              {p.image_url && (
-                <div className="relative h-40 w-full">
-                  <Image src={p.image_url} alt={p.name} fill className="object-cover" />
-                </div>
-              )}
-              <div className="p-4">
-                <h3 className="font-semibold text-[#22333B]">{p.name}</h3>
-                {p.description && <p className="text-sm text-[#22333B]/60 mt-1">{p.description}</p>}
-                <div className="flex items-center justify-between mt-3">
-                  <span className="text-[#C4893D] font-bold">{p.price} ريال</span>
+      {products && products.length > 0 && (
+        <>
+          <h2 style={{
+            fontSize: '1.1rem', fontWeight: 800, color: 'var(--ink)',
+            letterSpacing: '-.01em', marginBottom: '.85rem',
+            paddingTop: '1rem', borderTop: '1px solid var(--border)',
+          }}>المنتجات</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.65rem' }}>
+            {products.map((p) => (
+              <div key={p.id} style={{
+                background: 'var(--cream)', borderRadius: '14px',
+                padding: '.9rem 1rem', border: '1.5px solid var(--border)',
+              }}>
+                {p.image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={p.image_url} alt={p.name}
+                    style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '8px', marginBottom: '.6rem' }} />
+                )}
+                <div style={{ fontWeight: 700, fontSize: '.9rem', color: 'var(--ink)', marginBottom: '.15rem' }}>{p.name}</div>
+                {p.description && (
+                  <div style={{ fontSize: '.75rem', color: 'var(--mist)', marginBottom: '.55rem', lineHeight: 1.4 }}>{p.description}</div>
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontWeight: 800, color: 'var(--honey)', fontSize: '.95rem' }}>{p.price} ﷼</span>
                   {p.weight_grams && (
-                    <span className="text-xs text-[#22333B]/40">{p.weight_grams} جرام</span>
+                    <span style={{ fontSize: '.7rem', color: 'rgba(122,158,166,.7)' }}>{p.weight_grams} جرام</span>
                   )}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-[#22333B]/40 text-center py-10">لا توجد منتجات بعد</p>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )

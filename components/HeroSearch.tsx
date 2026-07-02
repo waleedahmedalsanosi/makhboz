@@ -22,19 +22,50 @@ export default function HeroSearch({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 max-w-md mx-auto">
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="ابحث عن خباز..."
-        className="flex-1 border border-[#34565F]/30 rounded-2xl px-4 py-2.5 text-[#22333B] focus:outline-none focus:ring-2 focus:ring-[#34565F]/30"
-      />
-      <button
-        type="submit"
-        className="bg-[#34565F] text-[#F4EFD1] px-5 py-2.5 rounded-2xl hover:opacity-90 transition"
-      >
-        بحث
-      </button>
+    <form onSubmit={handleSubmit} style={{ maxWidth: '500px', margin: '0 auto' }}>
+      <div style={{
+        display: 'flex',
+        background: 'rgba(255,255,255,.12)',
+        backdropFilter: 'blur(16px)',
+        border: '1px solid rgba(255,255,255,.2)',
+        borderRadius: '16px',
+        overflow: 'hidden',
+      }}>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="ابحث عن خباز أو منتج..."
+          style={{
+            flex: 1,
+            background: 'none',
+            border: 'none',
+            padding: '1rem 1.2rem',
+            color: '#fff',
+            fontSize: '.97rem',
+            fontFamily: 'inherit',
+            outline: 'none',
+            minWidth: 0,
+          }}
+        />
+        <button
+          type="submit"
+          style={{
+            background: 'var(--honey)',
+            border: 'none',
+            color: '#fff',
+            padding: '.8rem 1.5rem',
+            fontSize: '.9rem',
+            fontWeight: 700,
+            fontFamily: 'inherit',
+            cursor: 'pointer',
+            margin: '.35rem',
+            borderRadius: '11px',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          بحث
+        </button>
+      </div>
     </form>
   )
 }
