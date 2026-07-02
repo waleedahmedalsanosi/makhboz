@@ -1,0 +1,21 @@
+@import 'tailwindcss';
+
+@layer base {
+  :root {
+    --teal:  #34565F;
+    --cream: #F4EFD1;
+    --honey: #C4893D;
+    --ink:   #22333B;
+  }
+
+  html {
+    direction: rtl;
+    font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+    background-color: var(--cream);
+    color: var(--ink);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Amiri', serif;
+  }
+}
