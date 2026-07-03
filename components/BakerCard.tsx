@@ -1,3 +1,5 @@
+'use client'
+
 type Baker = {
   id: string
   username: string
