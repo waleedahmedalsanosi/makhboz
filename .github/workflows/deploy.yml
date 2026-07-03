@@ -26,6 +26,13 @@ jobs:
             SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
             ADMIN_SECRET=${{ secrets.ADMIN_SECRET }}
             ENVEOF
+            if [ -f /var/www/makhboz-secrets.env ]; then
+              cut -d= -f1 /var/www/makhboz-secrets.env | while read -r key; do
+                [ -n "$key" ] && sed -i "/^$key=/d" .env.local
+              done
+              cat /var/www/makhboz-secrets.env >> .env.local
+              echo "Applied server-side secret overrides"
+            fi
             rm -rf .next
             npm install --prefer-offline
             npm run build
