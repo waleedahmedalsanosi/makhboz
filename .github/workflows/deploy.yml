@@ -18,7 +18,7 @@ jobs:
           script: |
             cd /var/www/makhboz-app
             git fetch origin main
-            git checkout main
+            git checkout -f main
             git reset --hard origin/main
             rm -rf .next
             npm install --prefer-offline
