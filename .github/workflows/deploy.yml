@@ -26,5 +26,12 @@ jobs:
             pm2 restart makhboz
             pm2 save
             echo "Deployed at $(date)"
+            sleep 3
+            echo "=== ENV CHECK ==="
+            grep -c SUPABASE /var/www/makhboz-app/.env.local 2>/dev/null && echo ".env.local has Supabase vars" || echo "WARNING: .env.local missing or no Supabase vars"
+            echo "=== HEALTH CHECK ==="
+            curl -s -o /dev/null -w "Homepage: %{http_code}\n" http://localhost:3000/
+            curl -s http://localhost:3000/api/deploy | head -c 200
+            echo ""
           script_stop: true
           command_timeout: 5m

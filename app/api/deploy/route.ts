@@ -1,23 +1,37 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { execSync } from 'child_process'
+import { NextResponse } from 'next/server'
+import { createServerClient } from '@/lib/supabase/server'
 
-const DEPLOY_SECRET = process.env.DEPLOY_SECRET
+export async function GET() {
+  const hasUrl = !!process.env.NEXT_PUBLIC_SUPABASE_URL
+  const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY
+  const hasAnonKey = !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-export async function POST(req: NextRequest) {
-  const { secret } = await req.json()
-
-  if (!DEPLOY_SECRET || secret !== DEPLOY_SECRET) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  if (!hasUrl || !hasServiceKey) {
+    return NextResponse.json({
+      status: 'error',
+      env: { hasUrl, hasServiceKey, hasAnonKey },
+      message: 'Missing Supabase env vars',
+    })
   }
 
   try {
-    const output = execSync(
-      'cd /var/www/makhboz-app && git pull origin claude/g-stack-method-check-nmoay7 && npm install --prefer-offline && npm run build && pm2 restart makhboz',
-      { encoding: 'utf8', timeout: 120_000 }
-    )
-    return NextResponse.json({ ok: true, output })
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err)
-    return NextResponse.json({ ok: false, error: msg }, { status: 500 })
+    const supabase = createServerClient()
+    const { data, error, count } = await supabase
+      .from('bakers')
+      .select('id, username, is_active', { count: 'exact' })
+      .eq('is_active', true)
+      .limit(5)
+
+    return NextResponse.json({
+      status: 'ok',
+      env: { hasUrl, hasServiceKey, hasAnonKey },
+      bakers: { count, sample: data?.map(b => b.username), error: error?.message },
+    })
+  } catch (e) {
+    return NextResponse.json({
+      status: 'error',
+      env: { hasUrl, hasServiceKey, hasAnonKey },
+      message: e instanceof Error ? e.message : String(e),
+    })
   }
 }
