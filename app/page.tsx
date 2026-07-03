@@ -5,14 +5,26 @@ import HeroSearch from '@/components/HeroSearch'
 export const revalidate = 0
 
 const CITIES = ['الرياض', 'جدة', 'الدمام', 'مكة المكرمة', 'المدينة المنورة']
+const CATEGORIES = ['كسرة', 'عيش', 'بسبوسة', 'دكوة', 'قرقوش']
 
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ city?: string; q?: string }>
+  searchParams: Promise<{ city?: string; q?: string; cat?: string }>
 }) {
-  const { city, q } = await searchParams
+  const { city, q, cat } = await searchParams
   const supabase = createServerClient()
+
+  let bakerIdFilter: string[] | null = null
+  if (cat) {
+    const { data: productRows } = await supabase
+      .from('products')
+      .select('baker_id')
+      .eq('category', cat)
+      .eq('is_available', true)
+    const ids = [...new Set(productRows?.map((p: { baker_id: string }) => p.baker_id))]
+    bakerIdFilter = ids.length ? ids : []
+  }
 
   let query = supabase
     .from('bakers')
@@ -21,6 +33,13 @@ export default async function HomePage({
     .order('created_at', { ascending: false })
     .limit(48)
 
+  if (bakerIdFilter !== null) {
+    if (bakerIdFilter.length === 0) {
+      query = query.in('id', ['__none__'])
+    } else {
+      query = query.in('id', bakerIdFilter)
+    }
+  }
   if (city) query = query.eq('city', city)
   if (q) query = query.ilike('display_name', `%${q}%`)
 
@@ -124,41 +143,87 @@ export default async function HomePage({
 
       {/* CITY PILLS */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.5rem', justifyContent: 'center', padding: '1.2rem 1.5rem .2rem' }}>
-        <a
-          href="/"
-          style={{
-            padding: '.45rem 1.1rem',
-            borderRadius: '100px',
-            fontSize: '.82rem',
-            fontWeight: 600,
-            border: `1.5px solid ${!city ? 'var(--teal)' : 'var(--border)'}`,
-            color: !city ? 'var(--cream)' : 'var(--teal)',
-            background: !city ? 'var(--teal)' : '#fff',
-            textDecoration: 'none',
-            boxShadow: !city ? '0 4px 12px rgba(45,80,89,.25)' : '0 1px 3px rgba(0,0,0,.04)',
-          }}
-        >
-          الكل
-        </a>
-        {CITIES.map((c) => (
-          <a
-            key={c}
-            href={`/?city=${encodeURIComponent(c)}`}
-            style={{
-              padding: '.45rem 1.1rem',
-              borderRadius: '100px',
-              fontSize: '.82rem',
-              fontWeight: 600,
-              border: `1.5px solid ${city === c ? 'var(--teal)' : 'var(--border)'}`,
-              color: city === c ? 'var(--cream)' : 'var(--teal)',
-              background: city === c ? 'var(--teal)' : '#fff',
-              textDecoration: 'none',
-              boxShadow: city === c ? '0 4px 12px rgba(45,80,89,.25)' : '0 1px 3px rgba(0,0,0,.04)',
-            }}
-          >
-            {c}
-          </a>
-        ))}
+        {(() => {
+          const allCityParams = new URLSearchParams()
+          if (q) allCityParams.set('q', q)
+          if (cat) allCityParams.set('cat', cat)
+          const allHref = allCityParams.toString() ? `/?${allCityParams.toString()}` : '/'
+          return (
+            <a
+              href={allHref}
+              style={{
+                padding: '.45rem 1.1rem',
+                borderRadius: '100px',
+                fontSize: '.82rem',
+                fontWeight: 600,
+                border: `1.5px solid ${!city ? 'var(--teal)' : 'var(--border)'}`,
+                color: !city ? 'var(--cream)' : 'var(--teal)',
+                background: !city ? 'var(--teal)' : '#fff',
+                textDecoration: 'none',
+                boxShadow: !city ? '0 4px 12px rgba(45,80,89,.25)' : '0 1px 3px rgba(0,0,0,.04)',
+              }}
+            >
+              الكل
+            </a>
+          )
+        })()}
+        {CITIES.map((c) => {
+          const cityParams = new URLSearchParams()
+          cityParams.set('city', c)
+          if (q) cityParams.set('q', q)
+          if (cat) cityParams.set('cat', cat)
+          return (
+            <a
+              key={c}
+              href={`/?${cityParams.toString()}`}
+              style={{
+                padding: '.45rem 1.1rem',
+                borderRadius: '100px',
+                fontSize: '.82rem',
+                fontWeight: 600,
+                border: `1.5px solid ${city === c ? 'var(--teal)' : 'var(--border)'}`,
+                color: city === c ? 'var(--cream)' : 'var(--teal)',
+                background: city === c ? 'var(--teal)' : '#fff',
+                textDecoration: 'none',
+                boxShadow: city === c ? '0 4px 12px rgba(45,80,89,.25)' : '0 1px 3px rgba(0,0,0,.04)',
+              }}
+            >
+              {c}
+            </a>
+          )
+        })}
+      </div>
+
+      {/* CATEGORY PILLS */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.5rem', justifyContent: 'center', padding: '.8rem 1.5rem .2rem' }}>
+        {(['الكل', ...CATEGORIES] as const).map((c) => {
+          const isAll = c === 'الكل'
+          const active = isAll ? !cat : cat === c
+          const params = new URLSearchParams()
+          if (city) params.set('city', city)
+          if (q) params.set('q', q)
+          if (!isAll) params.set('cat', c)
+          const href = `/?${params.toString()}`
+          return (
+            <a
+              key={c}
+              href={href}
+              style={{
+                padding: '.45rem 1.1rem',
+                borderRadius: '100px',
+                fontSize: '.82rem',
+                fontWeight: 600,
+                border: `1.5px solid ${active ? 'var(--honey)' : 'var(--border)'}`,
+                color: active ? '#fff' : 'var(--honey)',
+                background: active ? 'var(--honey)' : '#fff',
+                textDecoration: 'none',
+                boxShadow: active ? '0 4px 12px rgba(196,137,61,.25)' : '0 1px 3px rgba(0,0,0,.04)',
+              }}
+            >
+              {c}
+            </a>
+          )
+        })}
       </div>
 
       {/* SECTION HEADER */}

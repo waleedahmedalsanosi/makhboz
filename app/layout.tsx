@@ -6,8 +6,9 @@ export const metadata: Metadata = {
   description: 'سوق المخبوزات السودانية — ابحث عن خبازين محليين وتواصل معهم مباشرةً',
   metadataBase: new URL('https://makhboz.net'),
   openGraph: {
-    title: 'مخبوز',
-    description: 'اكتشف خبازين سودانيين قريبين منك',
+    title: 'مخبوز — اكتشف خبازين سودانيين قريبين منك',
+    description: 'منصة مجانية للتواصل مع خبازين سودانيين في السعودية عبر واتساب',
+    siteName: 'مخبوز',
     locale: 'ar_SA',
     type: 'website',
   },
@@ -77,6 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           fontSize: '.8rem',
           color: 'rgba(245,240,216,.35)',
         }}>
+          <a href="/about" style={{ color: 'rgba(245,240,216,.5)', textDecoration: 'none', marginLeft: '.8rem' }}>عن مخبوز</a>
           <strong style={{ color: 'rgba(245,240,216,.65)' }}>مخبوز</strong> © 2026 — المملكة العربية السعودية
         </footer>
       </body>

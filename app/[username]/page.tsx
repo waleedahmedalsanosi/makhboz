@@ -10,9 +10,17 @@ export async function generateMetadata({ params }: Props) {
   const supabase = createServerClient()
   const { data } = await supabase.from('bakers').select('display_name, city, bio').eq('username', username).single()
   if (!data) return { title: 'مخبوز' }
+  const description = data.bio ?? `خباز سوداني في ${data.city}`
   return {
     title: `${data.display_name} — مخبوز`,
-    description: data.bio ?? `خباز سوداني في ${data.city}`,
+    description,
+    openGraph: {
+      title: `${data.display_name} — مخبوز`,
+      description,
+      siteName: 'مخبوز',
+      locale: 'ar_SA',
+      type: 'profile',
+    },
   }
 }
 

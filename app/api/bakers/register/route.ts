@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServerClient()
 
-  const { error } = await supabase.from('bakers').insert({
+  const { data, error } = await supabase.from('bakers').insert({
     display_name,
     username,
     whatsapp_number,
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     bio: bio || null,
     is_active: false,
     is_verified: false,
-  })
+  }).select('edit_token').single()
 
   if (error) {
     if (error.code === '23505') {
@@ -36,5 +36,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'حدث خطأ، حاول مرة أخرى' }, { status: 500 })
   }
 
-  return NextResponse.redirect(new URL('/join/success', req.url))
+  const webhook = process.env.NOTIFY_WEBHOOK
+  if (webhook) {
+    fetch(webhook, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event: 'baker_registered',
+        baker: { display_name, username, whatsapp_number, city, bio: bio || null },
+        timestamp: new Date().toISOString(),
+      }),
+    }).catch(() => {})
+  }
+
+  const successUrl = new URL('/join/success', req.url)
+  if (data?.edit_token) {
+    successUrl.searchParams.set('edit_token', data.edit_token)
+  }
+  return NextResponse.redirect(successUrl)
 }
