@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import { otpEnabled, normalizePhone } from '@/lib/otp'
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData()
   const display_name = formData.get('display_name') as string
-  const username = (formData.get('username') as string).toLowerCase().trim()
+  const username = ((formData.get('username') as string) || '').toLowerCase().trim()
   const whatsapp_number = formData.get('whatsapp_number') as string
   const city = formData.get('city') as string
   const bio = formData.get('bio') as string | null
@@ -18,6 +19,21 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = createAdminClient()
+
+  if (otpEnabled()) {
+    const phone = normalizePhone(whatsapp_number)
+    const { data: otpRow } = await supabase
+      .from('otp_codes')
+      .select('id')
+      .eq('phone', phone)
+      .eq('verified', true)
+      .gte('created_at', new Date(Date.now() - 30 * 60 * 1000).toISOString())
+      .limit(1)
+      .maybeSingle()
+    if (!otpRow) {
+      return NextResponse.json({ error: 'يجب تأكيد رقم الواتساب أولاً' }, { status: 403 })
+    }
+  }
 
   const { data, error } = await supabase.from('bakers').insert({
     display_name,
