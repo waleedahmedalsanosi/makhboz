@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 
-export const revalidate = 300
+export const revalidate = 0
 
 type Props = { params: Promise<{ username: string }> }
 
