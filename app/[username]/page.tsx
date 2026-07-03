@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import ReviewSection from '@/components/ReviewSection'
+import OrderSection from '@/components/OrderSection'
 
 export const revalidate = 0
 
@@ -128,39 +129,9 @@ export default async function BakerPage({ params }: Props) {
       {/* WhatsApp CTA */}
       {whatsappLink && <WhatsAppButton bakerId={baker.id} href={whatsappLink} />}
 
-      {/* Products */}
+      {/* Products + Order cart */}
       {products && products.length > 0 && (
-        <>
-          <h2 style={{
-            fontSize: '1.1rem', fontWeight: 800, color: 'var(--ink)',
-            letterSpacing: '-.01em', marginBottom: '.85rem',
-            paddingTop: '1rem', borderTop: '1px solid var(--border)',
-          }}>المنتجات</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.65rem' }}>
-            {products.map((p) => (
-              <div key={p.id} style={{
-                background: 'var(--cream)', borderRadius: '14px',
-                padding: '.9rem 1rem', border: '1.5px solid var(--border)',
-              }}>
-                {p.image_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.image_url} alt={p.name}
-                    style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '8px', marginBottom: '.6rem' }} />
-                )}
-                <div style={{ fontWeight: 700, fontSize: '.9rem', color: 'var(--ink)', marginBottom: '.15rem' }}>{p.name}</div>
-                {p.description && (
-                  <div style={{ fontSize: '.75rem', color: 'var(--mist)', marginBottom: '.55rem', lineHeight: 1.4 }}>{p.description}</div>
-                )}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontWeight: 800, color: 'var(--honey)', fontSize: '.95rem' }}>{p.price} ﷼</span>
-                  {p.weight_grams && (
-                    <span style={{ fontSize: '.7rem', color: 'rgba(122,158,166,.7)' }}>{p.weight_grams} جرام</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
+        <OrderSection bakerId={baker.id} products={products} />
       )}
 
       <ReviewSection bakerId={baker.id} reviews={reviews ?? []} />

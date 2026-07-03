@@ -28,15 +28,26 @@ export default async function AdminPage({
 
   const { data: bakers } = await query
 
-  const { data: events } = await supabase
-    .from('click_events')
-    .select('baker_id, event_type')
+  const { data: eventStats } = await supabase.rpc('click_event_stats')
   const stats = new Map<string, { views: number; clicks: number }>()
-  for (const e of events ?? []) {
-    const s = stats.get(e.baker_id) ?? { views: 0, clicks: 0 }
-    if (e.event_type === 'profile_view') s.views++
-    if (e.event_type === 'whatsapp_click') s.clicks++
-    stats.set(e.baker_id, s)
+  for (const row of (eventStats ?? []) as { baker_id: string; event_type: string; cnt: number }[]) {
+    const s = stats.get(row.baker_id) ?? { views: 0, clicks: 0 }
+    if (row.event_type === 'profile_view') s.views += Number(row.cnt)
+    if (row.event_type === 'whatsapp_click') s.clicks += Number(row.cnt)
+    stats.set(row.baker_id, s)
+  }
+
+  const { data: recentOrders } = await supabase
+    .from('orders')
+    .select('id, order_code, baker_id, customer_name, total, created_at, bakers(display_name)')
+    .order('created_at', { ascending: false })
+    .limit(20)
+  const orderCounts = new Map<string, number>()
+  {
+    const { data: allOrders } = await supabase.rpc('order_counts_per_baker')
+    for (const row of (allOrders ?? []) as { baker_id: string; cnt: number }[]) {
+      orderCounts.set(row.baker_id, Number(row.cnt))
+    }
   }
 
   const { data: pendingReviews } = await supabase
@@ -133,6 +144,8 @@ export default async function AdminPage({
                 👁 {stats.get(baker.id)?.views ?? 0} مشاهدة
                 {' · '}
                 💬 {stats.get(baker.id)?.clicks ?? 0} نقرة واتساب
+                {' · '}
+                🧾 {orderCounts.get(baker.id) ?? 0} طلب
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '.45rem', alignItems: 'flex-end' }}>
@@ -162,6 +175,39 @@ export default async function AdminPage({
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--mist)' }}>لا يوجد خبازون</div>
         )}
       </div>
+
+      {recentOrders && recentOrders.length > 0 && (
+        <div style={{ marginTop: '2.5rem' }}>
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--ink)', marginBottom: '1rem' }}>
+            آخر الطلبات ({recentOrders.length})
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
+            {recentOrders.map((o) => (
+              <div key={o.id} style={{
+                background: '#fff',
+                border: '1.5px solid var(--border)',
+                borderRadius: '12px',
+                padding: '.8rem 1.1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '1rem',
+                flexWrap: 'wrap',
+                fontSize: '.82rem',
+              }}>
+                <span style={{ fontWeight: 800, color: 'var(--ink)', direction: 'ltr' }}>#{o.order_code}</span>
+                <span style={{ color: 'var(--mist)' }}>
+                  {o.customer_name} ← {(o.bakers as unknown as { display_name: string })?.display_name ?? '—'}
+                </span>
+                <span style={{ fontWeight: 800, color: 'var(--honey)' }}>{o.total} ﷼</span>
+                <span style={{ fontSize: '.7rem', color: 'rgba(28,43,49,.35)' }}>
+                  {new Date(o.created_at).toLocaleDateString('ar-SA')}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {pendingReviews && pendingReviews.length > 0 && (
         <div style={{ marginTop: '2.5rem' }}>
