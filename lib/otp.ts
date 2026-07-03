@@ -13,6 +13,17 @@ export function normalizePhone(raw: string) {
   return p
 }
 
+export function activationMessage(username: string, editToken: string) {
+  return [
+    'مبروك! 🎉 ملفك على مخبوز صار مباشر.',
+    '',
+    `رابط ملفك: https://makhboz.net/${username}`,
+    `رابط تعديل ملفك (احفظه ولا تشاركه): https://makhboz.net/edit?token=${editToken}`,
+    '',
+    'شارك رابط ملفك مع عملائك واستقبل الطلبات عبر واتساب مباشرة.',
+  ].join('\n')
+}
+
 export async function sendWhatsAppMessage(phone: string, text: string) {
   const res = await fetch(process.env.WHATSAPP_API_URL!, {
     method: 'POST',

@@ -19,7 +19,7 @@ export default async function AdminPage({
 
   let query = supabase
     .from('bakers')
-    .select('id, username, display_name, city, whatsapp_number, is_active, is_verified, created_at')
+    .select('id, username, display_name, city, whatsapp_number, is_active, is_verified, created_at, edit_token')
     .order('created_at', { ascending: false })
 
   if (filter === 'pending') query = query.eq('is_active', false)
@@ -128,12 +128,28 @@ export default async function AdminPage({
                 💬 {stats.get(baker.id)?.clicks ?? 0} نقرة واتساب
               </div>
             </div>
-            <AdminActions
-              bakerId={baker.id}
-              isActive={baker.is_active}
-              isVerified={baker.is_verified}
-              secret={secret!}
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '.45rem', alignItems: 'flex-end' }}>
+              <AdminActions
+                bakerId={baker.id}
+                isActive={baker.is_active}
+                isVerified={baker.is_verified}
+                secret={secret!}
+              />
+              <a
+                href={`https://wa.me/${baker.whatsapp_number.replace(/\D/g, '')}?text=${encodeURIComponent(
+                  `مبروك! 🎉 ملفك على مخبوز صار مباشر.\n\nرابط ملفك: https://makhboz.net/${baker.username}\nرابط تعديل ملفك (احفظه ولا تشاركه): https://makhboz.net/edit?token=${baker.edit_token}\n\nشارك رابط ملفك مع عملائك واستقبل الطلبات عبر واتساب مباشرة.`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontSize: '.72rem', fontWeight: 700, color: '#25D366',
+                  textDecoration: 'none', background: 'rgba(37,211,102,.08)',
+                  padding: '.3rem .7rem', borderRadius: '100px',
+                }}
+              >
+                💬 أرسل رسالة التفعيل
+              </a>
+            </div>
           </div>
         )) : (
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--mist)' }}>لا يوجد خبازون</div>
