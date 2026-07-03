@@ -3,7 +3,6 @@ name: Deploy to makhboz.net
 on:
   push:
     branches:
-      - claude/g-stack-method-check-nmoay7
       - main
 
 jobs:
@@ -18,10 +17,14 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             cd /var/www/makhboz-app
-            git pull origin main
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
             rm -rf .next
             npm install --prefer-offline
             npm run build
             pm2 restart makhboz
             pm2 save
-            echo "✅ Deployed at $(date)"
+            echo "Deployed at $(date)"
+          script_stop: true
+          command_timeout: 5m
