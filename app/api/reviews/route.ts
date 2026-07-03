@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
     }
 
-    const supabase = createAdminClient()
+    const supabase = createServerClient()
 
     const { data: baker } = await supabase
       .from('bakers').select('id').eq('id', bakerId).eq('is_active', true).single()

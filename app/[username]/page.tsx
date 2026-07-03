@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { createServerClient, createAdminClient } from '@/lib/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import ReviewSection from '@/components/ReviewSection'
 
@@ -45,7 +45,7 @@ export default async function BakerPage({ params }: Props) {
     .order('created_at', { ascending: false })
     .limit(30)
 
-  await createAdminClient()
+  await supabase
     .from('click_events')
     .insert({ baker_id: baker.id, event_type: 'profile_view' })
     .then(() => {}, () => {})
