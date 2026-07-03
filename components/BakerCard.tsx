@@ -8,6 +8,7 @@ type Baker = {
   bio: string | null
   avatar_url: string | null
   is_verified: boolean
+  available_today?: boolean
 }
 
 export default function BakerCard({ baker }: { baker: Baker }) {
@@ -63,6 +64,22 @@ export default function BakerCard({ baker }: { baker: Baker }) {
           ].join(','),
           pointerEvents: 'none',
         }} />
+
+        {baker.available_today && (
+          <span style={{
+            position: 'absolute',
+            top: '.7rem',
+            right: '.7rem',
+            background: 'var(--honey)',
+            color: '#fff',
+            fontSize: '.68rem',
+            fontWeight: 700,
+            padding: '.22rem .6rem',
+            borderRadius: '100px',
+            letterSpacing: '.02em',
+            boxShadow: '0 3px 10px rgba(196,137,61,.4)',
+          }}>🔥 متوفر اليوم</span>
+        )}
 
         {baker.is_verified && (
           <span style={{

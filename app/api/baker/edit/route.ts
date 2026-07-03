@@ -32,14 +32,21 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'رمز غير صالح' }, { status: 404 })
   }
 
+  const updateFields: Record<string, unknown> = {
+    display_name: bakerFields.display_name.trim(),
+    city: bakerFields.city,
+    bio: bakerFields.bio?.trim() || null,
+    whatsapp_number: bakerFields.whatsapp_number.trim(),
+  }
+  if (typeof bakerFields.available_today === 'boolean') {
+    updateFields.available_today_date = bakerFields.available_today
+      ? new Date().toISOString().slice(0, 10)
+      : null
+  }
+
   const { error: bakerError } = await supabase
     .from('bakers')
-    .update({
-      display_name: bakerFields.display_name.trim(),
-      city: bakerFields.city,
-      bio: bakerFields.bio?.trim() || null,
-      whatsapp_number: bakerFields.whatsapp_number.trim(),
-    })
+    .update(updateFields)
     .eq('id', baker.id)
 
   if (bakerError) {

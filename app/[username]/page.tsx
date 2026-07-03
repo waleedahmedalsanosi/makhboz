@@ -108,6 +108,13 @@ export default async function BakerPage({ params }: Props) {
             color: '#fff', padding: '.18rem .55rem', borderRadius: '100px',
           }}>موثّق ✓</span>
         )}
+        {baker.available_today_date === new Date().toISOString().slice(0, 10) && (
+          <span style={{
+            fontSize: '.65rem', fontWeight: 700, background: 'rgba(196,137,61,.12)',
+            color: 'var(--honey)', padding: '.18rem .55rem', borderRadius: '100px',
+            border: '1px solid rgba(196,137,61,.3)',
+          }}>🔥 متوفر اليوم</span>
+        )}
       </div>
       <p style={{ fontSize: '.85rem', color: 'var(--mist)', marginBottom: '.85rem', fontWeight: 500 }}>
         📍 {baker.city}

@@ -9,6 +9,7 @@ type Baker = {
   city: string
   bio: string | null
   whatsapp_number: string
+  available_today_date?: string | null
 }
 
 type Product = {
@@ -60,6 +61,9 @@ export default function EditProfileForm({
   const [city, setCity] = useState(baker.city)
   const [bio, setBio] = useState(baker.bio || '')
   const [whatsapp, setWhatsapp] = useState(baker.whatsapp_number)
+  const [availableToday, setAvailableToday] = useState(
+    baker.available_today_date === new Date().toISOString().slice(0, 10)
+  )
   const [products, setProducts] = useState<(Product | NewProduct)[]>(initialProducts)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null)
@@ -96,7 +100,7 @@ export default function EditProfileForm({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token,
-          baker: { display_name: displayName, city, bio, whatsapp_number: whatsapp },
+          baker: { display_name: displayName, city, bio, whatsapp_number: whatsapp, available_today: availableToday },
           products: products.map(p => ({
             ...('id' in p && p.id ? { id: p.id } : {}),
             name: p.name,
@@ -160,6 +164,35 @@ export default function EditProfileForm({
           <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)}
             style={{ ...inputStyle, direction: 'ltr' }} />
         </div>
+
+        <button
+          type="button"
+          onClick={() => setAvailableToday(!availableToday)}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            border: `1.5px solid ${availableToday ? 'var(--honey)' : 'var(--border)'}`,
+            background: availableToday ? 'rgba(196,137,61,.08)' : 'var(--cream)',
+            borderRadius: '14px', padding: '.85rem 1rem', cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          <span style={{ fontSize: '.9rem', fontWeight: 700, color: availableToday ? 'var(--honey)' : 'var(--ink)' }}>
+            🔥 متوفر اليوم — عندي إنتاج جاهز
+          </span>
+          <span style={{
+            width: '42px', height: '24px', borderRadius: '100px', position: 'relative',
+            background: availableToday ? 'var(--honey)' : 'rgba(28,43,49,.15)', transition: 'background .2s', flexShrink: 0,
+          }}>
+            <span style={{
+              position: 'absolute', top: '3px',
+              insetInlineStart: availableToday ? '21px' : '3px',
+              width: '18px', height: '18px', borderRadius: '50%', background: '#fff',
+              transition: 'inset-inline-start .2s', display: 'block',
+            }} />
+          </span>
+        </button>
+        <p style={{ fontSize: '.72rem', color: 'var(--mist)', marginTop: '-.6rem' }}>
+          تظهر شارة "متوفر اليوم" على ملفك حتى نهاية اليوم، ويتقدم ملفك في الصفحة الرئيسية.
+        </p>
       </div>
 
       {/* Products */}

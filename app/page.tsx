@@ -28,7 +28,7 @@ export default async function HomePage({
 
   let query = supabase
     .from('bakers')
-    .select('id, username, display_name, city, bio, avatar_url, is_verified')
+    .select('id, username, display_name, city, bio, avatar_url, is_verified, available_today_date')
     .eq('is_active', true)
     .order('created_at', { ascending: false })
     .limit(48)
@@ -43,7 +43,11 @@ export default async function HomePage({
   if (city) query = query.eq('city', city)
   if (q) query = query.ilike('display_name', `%${q}%`)
 
-  const { data: bakers } = await query
+  const { data: rawBakers } = await query
+  const today = new Date().toISOString().slice(0, 10)
+  const bakers = (rawBakers ?? [])
+    .map(b => ({ ...b, available_today: b.available_today_date === today }))
+    .sort((a, b) => Number(b.available_today) - Number(a.available_today))
 
   const { count } = await supabase
     .from('bakers')
