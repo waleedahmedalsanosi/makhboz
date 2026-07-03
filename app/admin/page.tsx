@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AdminActions from './AdminActions'
 
@@ -15,7 +15,7 @@ export default async function AdminPage({
     redirect('/')
   }
 
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
 
   let query = supabase
     .from('bakers')

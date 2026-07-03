@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 
 const VALID_CITIES = ['الرياض', 'جدة', 'الدمام', 'مكة المكرمة', 'المدينة المنورة']
 const VALID_CATEGORIES = ['كسرة', 'عيش', 'بسبوسة', 'دكوة', 'قرقوش', 'أخرى']
@@ -20,7 +20,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'مدينة غير صالحة' }, { status: 400 })
   }
 
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
 
   const { data: baker } = await supabase
     .from('bakers')

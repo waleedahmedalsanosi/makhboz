@@ -20,18 +20,22 @@ jobs:
             git fetch origin main
             git checkout -f main
             git reset --hard origin/main
+            cat > .env.local << 'ENVEOF'
+            NEXT_PUBLIC_SUPABASE_URL=https://fgdujeijorhjraxipxwc.supabase.co
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnZHVqZWlqb3JoanJheGlweHdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4MzE2MDgsImV4cCI6MjA5NDQwNzYwOH0.lMEwOR3sERzp8al2-jWuIw0JoZzuDRNy0bF6hdAWMko
+            SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+            ADMIN_SECRET=${{ secrets.ADMIN_SECRET }}
+            ENVEOF
             rm -rf .next
             npm install --prefer-offline
             npm run build
-            pm2 restart makhboz
+            pm2 restart makhboz --update-env
             pm2 save
             echo "Deployed at $(date)"
             sleep 3
-            echo "=== ENV CHECK ==="
-            grep -c SUPABASE /var/www/makhboz-app/.env.local 2>/dev/null && echo ".env.local has Supabase vars" || echo "WARNING: .env.local missing or no Supabase vars"
             echo "=== HEALTH CHECK ==="
             curl -s -o /dev/null -w "Homepage: %{http_code}\n" http://localhost:3000/
-            curl -s http://localhost:3000/api/deploy | head -c 200
+            curl -s http://localhost:3000/api/deploy
             echo ""
           script_stop: true
           command_timeout: 5m

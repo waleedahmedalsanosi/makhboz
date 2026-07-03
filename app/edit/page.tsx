@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import EditProfileForm from './EditProfileForm'
 
 export const revalidate = 0
@@ -11,7 +11,7 @@ export default async function EditPage({ searchParams }: Props) {
 
   if (!token) redirect('/')
 
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
 
   const { data: baker } = await supabase
     .from('bakers')
