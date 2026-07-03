@@ -27,6 +27,17 @@ export default async function AdminPage({
 
   const { data: bakers } = await query
 
+  const { data: events } = await supabase
+    .from('click_events')
+    .select('baker_id, event_type')
+  const stats = new Map<string, { views: number; clicks: number }>()
+  for (const e of events ?? []) {
+    const s = stats.get(e.baker_id) ?? { views: 0, clicks: 0 }
+    if (e.event_type === 'profile_view') s.views++
+    if (e.event_type === 'whatsapp_click') s.clicks++
+    stats.set(e.baker_id, s)
+  }
+
   const total = bakers?.length ?? 0
   const active = bakers?.filter(b => b.is_active).length ?? 0
   const pending = bakers?.filter(b => !b.is_active).length ?? 0
@@ -111,6 +122,10 @@ export default async function AdminPage({
               </div>
               <div style={{ fontSize: '.72rem', color: 'rgba(28,43,49,.3)', marginTop: '.1rem' }}>
                 {new Date(baker.created_at).toLocaleDateString('ar-SA')}
+                {' · '}
+                👁 {stats.get(baker.id)?.views ?? 0} مشاهدة
+                {' · '}
+                💬 {stats.get(baker.id)?.clicks ?? 0} نقرة واتساب
               </div>
             </div>
             <AdminActions

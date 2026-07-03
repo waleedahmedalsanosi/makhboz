@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerClient, createAdminClient } from '@/lib/supabase/server'
+import WhatsAppButton from '@/components/WhatsAppButton'
 
 export const revalidate = 0
 
@@ -34,6 +35,11 @@ export default async function BakerPage({ params }: Props) {
 
   const { data: products } = await supabase
     .from('products').select('*').eq('baker_id', baker.id).eq('is_available', true).order('created_at', { ascending: false })
+
+  await createAdminClient()
+    .from('click_events')
+    .insert({ baker_id: baker.id, event_type: 'profile_view' })
+    .then(() => {}, () => {})
 
   const waText = encodeURIComponent(`مرحباً، رأيت ملفك على مخبوز وأريد الطلب 🍞`)
   const whatsappLink = baker.whatsapp_number
@@ -104,22 +110,7 @@ export default async function BakerPage({ params }: Props) {
       )}
 
       {/* WhatsApp CTA */}
-      {whatsappLink && (
-        <a
-          href={whatsappLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            gap: '.6rem', background: '#25D366', color: '#fff',
-            padding: '.95rem', borderRadius: '14px', fontWeight: 800,
-            fontSize: '1rem', textDecoration: 'none', letterSpacing: '.01em',
-            boxShadow: '0 6px 20px rgba(37,211,102,.3)', marginBottom: '1.6rem',
-          }}
-        >
-          💬 تواصل عبر واتساب
-        </a>
-      )}
+      {whatsappLink && <WhatsAppButton bakerId={baker.id} href={whatsappLink} />}
 
       {/* Products */}
       {products && products.length > 0 && (
