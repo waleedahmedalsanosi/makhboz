@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 
+const VALID_CITIES = ['الرياض', 'جدة', 'الدمام', 'مكة المكرمة', 'المدينة المنورة']
+const VALID_CATEGORIES = ['كسرة', 'عيش', 'بسبوسة', 'دكوة', 'قرقوش', 'أخرى']
+
 export async function PATCH(req: NextRequest) {
   const body = await req.json()
   const { token, baker: bakerFields, products } = body
@@ -9,9 +12,16 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'رمز غير صالح' }, { status: 400 })
   }
 
+  if (!bakerFields?.display_name?.trim() || !bakerFields?.whatsapp_number?.trim()) {
+    return NextResponse.json({ error: 'الاسم ورقم الواتساب مطلوبان' }, { status: 400 })
+  }
+
+  if (bakerFields.city && !VALID_CITIES.includes(bakerFields.city)) {
+    return NextResponse.json({ error: 'مدينة غير صالحة' }, { status: 400 })
+  }
+
   const supabase = createServerClient()
 
-  // Find baker by edit_token
   const { data: baker } = await supabase
     .from('bakers')
     .select('id, username')
@@ -22,14 +32,13 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'رمز غير صالح' }, { status: 404 })
   }
 
-  // Update baker fields
   const { error: bakerError } = await supabase
     .from('bakers')
     .update({
-      display_name: bakerFields.display_name,
+      display_name: bakerFields.display_name.trim(),
       city: bakerFields.city,
-      bio: bakerFields.bio || null,
-      whatsapp_number: bakerFields.whatsapp_number,
+      bio: bakerFields.bio?.trim() || null,
+      whatsapp_number: bakerFields.whatsapp_number.trim(),
     })
     .eq('id', baker.id)
 
@@ -37,33 +46,46 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'خطأ في تحديث البيانات' }, { status: 500 })
   }
 
-  // Process products
+  const errors: string[] = []
+
   if (products && Array.isArray(products)) {
     for (const product of products) {
+      if (!product._delete && (!product.name?.trim() || product.price < 0)) continue
+
+      if (product.category && !VALID_CATEGORIES.includes(product.category)) {
+        product.category = 'أخرى'
+      }
+
+      let result
       if (product._delete && product.id) {
-        // Delete
-        await supabase.from('products').delete().eq('id', product.id).eq('baker_id', baker.id)
+        result = await supabase.from('products').delete().eq('id', product.id).eq('baker_id', baker.id)
       } else if (product.id) {
-        // Update existing
-        await supabase.from('products').update({
-          name: product.name,
-          price: product.price,
-          weight_grams: product.weight_grams,
-          category: product.category,
+        result = await supabase.from('products').update({
+          name: product.name.trim(),
+          price: Math.max(0, Number(product.price)),
+          weight_grams: product.weight_grams ? Math.max(0, Number(product.weight_grams)) : null,
+          category: product.category || 'أخرى',
           is_available: product.is_available,
         }).eq('id', product.id).eq('baker_id', baker.id)
       } else if (!product._delete) {
-        // Insert new
-        await supabase.from('products').insert({
+        result = await supabase.from('products').insert({
           baker_id: baker.id,
-          name: product.name,
-          price: product.price,
-          weight_grams: product.weight_grams,
-          category: product.category,
+          name: product.name.trim(),
+          price: Math.max(0, Number(product.price)),
+          weight_grams: product.weight_grams ? Math.max(0, Number(product.weight_grams)) : null,
+          category: product.category || 'أخرى',
           is_available: product.is_available,
         })
       }
+
+      if (result?.error) {
+        errors.push(`${product.name}: ${result.error.message}`)
+      }
     }
+  }
+
+  if (errors.length > 0) {
+    return NextResponse.json({ ok: true, username: baker.username, warnings: errors })
   }
 
   return NextResponse.json({ ok: true, username: baker.username })

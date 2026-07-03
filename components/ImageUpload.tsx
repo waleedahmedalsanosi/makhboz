@@ -25,6 +25,7 @@ export default function ImageUpload({ bucket, token, currentUrl, onUploaded }: I
     if (!file) return
 
     setError(null)
+    if (preview && preview.startsWith('blob:')) URL.revokeObjectURL(preview)
     setPreview(URL.createObjectURL(file))
     setUploading(true)
     setProgress(0)

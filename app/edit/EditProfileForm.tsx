@@ -63,9 +63,11 @@ export default function EditProfileForm({
   const [products, setProducts] = useState<(Product | NewProduct)[]>(initialProducts)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null)
+  const [keyCounter, setKeyCounter] = useState(0)
 
   function addProduct() {
     setProducts([...products, { name: '', price: 0, weight_grams: null, category: 'أخرى', is_available: true }])
+    setKeyCounter(c => c + 1)
   }
 
   function updateProduct(index: number, field: string, value: unknown) {
@@ -82,6 +84,10 @@ export default function EditProfileForm({
   }
 
   async function handleSave() {
+    if (!displayName.trim() || !whatsapp.trim()) {
+      setMessage({ text: 'الاسم ورقم الواتساب مطلوبان', ok: false })
+      return
+    }
     setSaving(true)
     setMessage(null)
     try {
@@ -172,7 +178,7 @@ export default function EditProfileForm({
         {products.map((p, i) => {
           if ((p as Product)._delete) return null
           return (
-            <div key={i} style={{
+            <div key={'id' in p && p.id ? p.id : `new-${i}-${keyCounter}`} style={{
               border: '1px solid var(--border)',
               borderRadius: '16px',
               padding: '1.25rem',

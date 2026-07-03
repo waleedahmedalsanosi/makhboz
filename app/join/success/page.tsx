@@ -34,7 +34,7 @@ export default async function JoinSuccessPage({ searchParams }: Props) {
             direction: 'ltr',
             display: 'inline-block',
           }}>
-            {typeof window !== 'undefined' ? window.location.origin : 'makhboz.net'}{editLink}
+            makhboz.net{editLink}
           </a>
         </div>
       )}
