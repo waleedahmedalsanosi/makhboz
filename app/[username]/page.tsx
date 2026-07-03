@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createServerClient, createAdminClient } from '@/lib/supabase/server'
 import WhatsAppButton from '@/components/WhatsAppButton'
+import ReviewSection from '@/components/ReviewSection'
 
 export const revalidate = 0
 
@@ -35,6 +36,14 @@ export default async function BakerPage({ params }: Props) {
 
   const { data: products } = await supabase
     .from('products').select('*').eq('baker_id', baker.id).eq('is_available', true).order('created_at', { ascending: false })
+
+  const { data: reviews } = await supabase
+    .from('reviews')
+    .select('id, customer_name, rating, comment, created_at')
+    .eq('baker_id', baker.id)
+    .eq('is_approved', true)
+    .order('created_at', { ascending: false })
+    .limit(30)
 
   await createAdminClient()
     .from('click_events')
@@ -146,6 +155,8 @@ export default async function BakerPage({ params }: Props) {
           </div>
         </>
       )}
+
+      <ReviewSection bakerId={baker.id} reviews={reviews ?? []} />
     </div>
   )
 }

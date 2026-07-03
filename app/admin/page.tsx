@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AdminActions from './AdminActions'
+import ReviewActions from './ReviewActions'
 
 export const revalidate = 0
 
@@ -37,6 +38,12 @@ export default async function AdminPage({
     if (e.event_type === 'whatsapp_click') s.clicks++
     stats.set(e.baker_id, s)
   }
+
+  const { data: pendingReviews } = await supabase
+    .from('reviews')
+    .select('id, baker_id, customer_name, rating, comment, created_at, bakers(display_name)')
+    .eq('is_approved', false)
+    .order('created_at', { ascending: false })
 
   const total = bakers?.length ?? 0
   const active = bakers?.filter(b => b.is_active).length ?? 0
@@ -155,6 +162,46 @@ export default async function AdminPage({
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--mist)' }}>لا يوجد خبازون</div>
         )}
       </div>
+
+      {pendingReviews && pendingReviews.length > 0 && (
+        <div style={{ marginTop: '2.5rem' }}>
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--ink)', marginBottom: '1rem' }}>
+            تقييمات بانتظار المراجعة ({pendingReviews.length})
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
+            {pendingReviews.map((r) => (
+              <div key={r.id} style={{
+                background: '#fff',
+                border: '1.5px solid rgba(196,137,61,.35)',
+                borderRadius: '12px',
+                padding: '1rem 1.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                flexWrap: 'wrap',
+              }}>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <div style={{ fontWeight: 700, color: 'var(--ink)', fontSize: '.9rem' }}>
+                    {r.customer_name}
+                    <span style={{ color: 'var(--honey)', marginRight: '.5rem', direction: 'ltr', display: 'inline-block' }}>
+                      {'★'.repeat(r.rating)}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '.78rem', color: 'var(--mist)', marginTop: '.15rem' }}>
+                    عن: {(r.bakers as unknown as { display_name: string })?.display_name ?? '—'}
+                  </div>
+                  {r.comment && (
+                    <p style={{ fontSize: '.82rem', color: 'rgba(28,43,49,.6)', marginTop: '.3rem', lineHeight: 1.5 }}>
+                      {r.comment}
+                    </p>
+                  )}
+                </div>
+                <ReviewActions reviewId={r.id} secret={secret!} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
